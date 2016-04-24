@@ -12,8 +12,8 @@ UCLASS()
 class SLINGSHOT_API USlingshotUtils : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
-	
-	
-	
+
+public:
+	static FVector GetPointOnEdgeOfCircle(FVector location, float radius);
 	
 };

@@ -1,19 +1,21 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Slingshot.h"
+#include "SlingshotUtils.h"
+#include "SpaceObstacle.h"
 #include "AsteroidHandler.h"
 
 AAsteroidHandler::AAsteroidHandler()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
-	BoxCollision->SetCollisionProfileName("OverlapAll");
-	BoxCollision->SetSimulatePhysics(true);
-	BoxCollision->AttachTo(RootComponent);
+	SphereCollision = CreateDefaultSubobject<USphereComponent>(TEXT("SphereCollision"));
+	SphereCollision->SetCollisionProfileName("OverlapAll");
+	SphereCollision->SetSphereRadius(1000.0f);
+	SphereCollision->AttachTo(RootComponent);
 
-	BoxCollision->OnComponentBeginOverlap.AddDynamic(this, &AAsteroidHandler::OnBoxOverlapBegin);
-	BoxCollision->OnComponentEndOverlap.AddDynamic(this, &AAsteroidHandler::OnBoxOverlapEnd);
+	SphereCollision->OnComponentBeginOverlap.AddDynamic(this, &AAsteroidHandler::OnSphereOverlapBegin);
+	SphereCollision->OnComponentEndOverlap.AddDynamic(this, &AAsteroidHandler::OnSphereOverlapEnd);
 
 }
 
@@ -23,17 +25,27 @@ void AAsteroidHandler::BeginPlay()
 
 	for (int i = 0; i < MaximumNumberOfBodies; i++)
 	{
-		Asteroids.Add(SpawnAsteroid());
+		Asteroids.Add(SpawnAsteroidWithinSphere());
 	}
 }
 
-AActor* AAsteroidHandler::SpawnAsteroid()
+AActor* AAsteroidHandler::SpawnAsteroidWithinSphere()
 {
-	FVector extent = BoxCollision->GetScaledBoxExtent();
-	auto x = FMath::FRandRange(-extent.X, extent.X) + BoxCollision->GetComponentLocation().X;
-	auto y = FMath::FRandRange(-extent.Y, extent.Y) + BoxCollision->GetComponentLocation().Y;
-	auto z = 0.0f;
-	AActor* body = GetWorld()->SpawnActor<AActor>(AsteroidTemplate, FVector(x, y, z), FRotator::ZeroRotator);
+	FVector spawn_location;
+	spawn_location = FMath::VRand();
+	spawn_location.Z = 0;
+	spawn_location *= SphereCollision->GetScaledSphereRadius();
+	spawn_location = spawn_location.GetClampedToSize2D(0, SphereCollision->GetScaledSphereRadius());
+	ASpaceObstacle* body = GetWorld()->SpawnActor<ASpaceObstacle>(AsteroidTemplate, spawn_location, FRotator::ZeroRotator);
+	body->MeshComponent->AddImpulse(FMath::VRand() * body->MeshComponent->GetMass() * 1000);
+	return body;
+}
+
+AActor* AAsteroidHandler::SpawnAsteroidOnEdgeOfSphere()
+{
+	FVector spawn_location = USlingshotUtils::GetPointOnEdgeOfCircle(SphereCollision->GetComponentLocation(), SphereCollision->GetScaledSphereRadius());
+	ASpaceObstacle* body = GetWorld()->SpawnActor<ASpaceObstacle>(AsteroidTemplate, spawn_location, FRotator::ZeroRotator);
+	body->MeshComponent->AddImpulse(FMath::VRand() * body->MeshComponent->GetMass() * 1000);
 	return body;
 }
 
@@ -42,12 +54,15 @@ void AAsteroidHandler::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AAsteroidHandler::OnBoxOverlapEnd(AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
+void AAsteroidHandler::OnSphereOverlapBegin(AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("COLLISION ENDED!"));
 }
 
-void AAsteroidHandler::OnBoxOverlapBegin(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult)
+void AAsteroidHandler::OnSphereOverlapEnd(AActor * OtherActor, UPrimitiveComponent * OtherComp, int32 OtherBodyIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("COLLISION BEGUN!"));
+	if (OtherActor->GetClass()->IsChildOf(ASpaceObstacle::StaticClass()))
+	{
+		OtherActor->Destroy();
+		Asteroids.Add(SpawnAsteroidOnEdgeOfSphere());
+	}
 }

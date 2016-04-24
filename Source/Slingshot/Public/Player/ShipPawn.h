@@ -43,5 +43,6 @@ public:
 
 	static const FName MoveForwardBinding;
 	static const FName MoveRightBinding;
-	
+	static const FName ForwardThrustBinding;
+
 };

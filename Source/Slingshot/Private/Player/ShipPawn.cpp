@@ -5,6 +5,7 @@
 
 const FName AShipPawn::MoveForwardBinding("MoveForward");
 const FName AShipPawn::MoveRightBinding("MoveRight");
+const FName AShipPawn::ForwardThrustBinding("ForwardThrust");
 
 AShipPawn::AShipPawn()
 {
@@ -27,7 +28,7 @@ AShipPawn::AShipPawn()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->AttachTo(RootComponent);
 	CameraBoom->bAbsoluteRotation = true;
-	CameraBoom->TargetArmLength = 8000.f;
+	CameraBoom->TargetArmLength = 10000.f;
 	CameraBoom->RelativeRotation = FRotator(-80.f, 0.f, 0.f);
 	CameraBoom->bDoCollisionTest = false;
 
@@ -51,10 +52,11 @@ void AShipPawn::Tick( float DeltaTime )
 
 	if (MoveDirection.SizeSquared() > 0.0f)
 	{
-		MeshComponent->AddForce(MeshComponent->GetForwardVector() * MeshComponent->GetMass() * MovementForceStrength * DeltaTime);
-		MeshComponent->SetRelativeRotation(FRotator(FQuat::FastLerp(MeshComponent->RelativeRotation.Quaternion(), MoveDirection.Rotation().Quaternion(), 0.05f)), true);
+		MeshComponent->SetRelativeRotation(MoveDirection.Rotation());
 	}
 
+	if (GetInputAxisValue(ForwardThrustBinding) > 0.0f)
+		MeshComponent->AddForce(MeshComponent->GetForwardVector() * MeshComponent->GetMass() * MovementForceStrength * DeltaTime * GetInputAxisValue(ForwardThrustBinding));
 }
 
 void AShipPawn::SetupPlayerInputComponent(class UInputComponent* InputComponent)
@@ -63,5 +65,6 @@ void AShipPawn::SetupPlayerInputComponent(class UInputComponent* InputComponent)
 
 	InputComponent->BindAxis(MoveForwardBinding);
 	InputComponent->BindAxis(MoveRightBinding);
+	InputComponent->BindAxis(ForwardThrustBinding);
 }
 

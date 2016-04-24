@@ -3,6 +3,7 @@
 #pragma once
 
 #include <vector>
+#include "SpaceObstacle.h"
 #include "GameFramework/Actor.h"
 #include "AsteroidHandler.generated.h"
 
@@ -30,7 +31,7 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 	UPROPERTY(EditAnywhere, Category = "Template")
-		TSubclassOf<class AActor> AsteroidTemplate;
+		TSubclassOf<class ASpaceObstacle> AsteroidTemplate;
 
 	UPROPERTY(EditAnywhere)
 		EBodySpawnShape BodySpawnShape = EBodySpawnShape::Disc;
@@ -38,18 +39,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		int32 MaximumNumberOfBodies;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		class UBoxComponent* BoxCollision;
+	AActor* SpawnAsteroidWithinSphere();
 
-	UPROPERTY(VisibleAnywhere)
+	AActor* SpawnAsteroidOnEdgeOfSphere();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class USphereComponent* SphereCollision;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 		TArray<AActor*> Asteroids;
 
-	AActor* SpawnAsteroid();
+	UFUNCTION()
+		void OnSphereOverlapBegin(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 	UFUNCTION()
-		void OnBoxOverlapEnd(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
-	UFUNCTION()
-		void OnBoxOverlapBegin(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+		void OnSphereOverlapEnd(class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 };
