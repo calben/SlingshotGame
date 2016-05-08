@@ -15,8 +15,7 @@ ASpaceObstacle::ASpaceObstacle()
 	MeshComponent->SetSimulatePhysics(true);
 	MeshComponent->BodyInstance.bLockZTranslation = true;
 	MeshComponent->SetEnableGravity(false);
-
-	MeshComponent->AttachTo(RootComponent);
+	RootComponent = MeshComponent;
 
 }
 

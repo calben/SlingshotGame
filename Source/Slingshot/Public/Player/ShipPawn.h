@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/Pawn.h"
+#include "PreferredDistanceParticle.h"
 #include "ShipPawn.generated.h"
 
 UCLASS()
@@ -40,6 +41,15 @@ public:
 
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 		bool bUseFueld = true;
+
+	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
+		int32 numParticles = 6;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		bool bUseSeparateThrusterAxes;
+
+	UPROPERTY(EditAnywhere)
+		TArray<APreferredDistanceParticle*> Particles;
 
 	static const FName MoveForwardBinding;
 	static const FName MoveRightBinding;

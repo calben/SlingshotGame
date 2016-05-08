@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Slingshot.h"
+#include "PreferredDistanceParticle.h"
 #include "ShipPawn.h"
 
 const FName AShipPawn::MoveForwardBinding("MoveForward");
@@ -21,6 +22,9 @@ AShipPawn::AShipPawn()
 	MeshComponent->SetEnableGravity(false);
 	MeshComponent->SetLinearDamping(0.2f);
 	MeshComponent->SetAngularDamping(0.8f);
+	MeshComponent->BodyInstance.bLockXRotation = true;
+	MeshComponent->BodyInstance.bLockYRotation = true;
+
 
 	RootComponent = MeshComponent;
 
@@ -41,22 +45,33 @@ AShipPawn::AShipPawn()
 void AShipPawn::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	for (auto i = 0; i < numParticles; i++)
+	{
+		auto spawn_location = this->GetActorLocation();
+		spawn_location.X -= 2000.0f;
+		spawn_location.Y += i * 200.0f - numParticles / 2 * 200.0f;
+		auto particle = GetWorld()->SpawnActor<APreferredDistanceParticle>(APreferredDistanceParticle::StaticClass(), spawn_location, FRotator::ZeroRotator);
+		particle->AffectingActors.Add(this);
+		particle->PreferredDistances.Add(2000.0f);
+		particle->BaseSpeed = 10.0f;
+		particle->SpeedExponential = 1.2f;
+	}
 }
 
-void AShipPawn::Tick( float DeltaTime )
+void AShipPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	const FVector MoveDirection = FVector(GetInputAxisValue(MoveForwardBinding), GetInputAxisValue(MoveRightBinding), 0.f).GetClampedToMaxSize(1.0f);
-
-	if (MoveDirection.SizeSquared() > 0.0f)
+	const float MoveDirectionSizeSquared = MoveDirection.SizeSquared();
+	if (MoveDirectionSizeSquared > 0.0f)
 	{
 		MeshComponent->SetRelativeRotation(MoveDirection.Rotation());
 	}
-
-	if (GetInputAxisValue(ForwardThrustBinding) > 0.0f)
+	if (bUseSeparateThrusterAxes)
 		MeshComponent->AddForce(MeshComponent->GetForwardVector() * MeshComponent->GetMass() * MovementForceStrength * DeltaTime * GetInputAxisValue(ForwardThrustBinding));
+	else
+		MeshComponent->AddForce(MeshComponent->GetForwardVector() * MeshComponent->GetMass() * MovementForceStrength * DeltaTime * MoveDirectionSizeSquared);
 }
 
 void AShipPawn::SetupPlayerInputComponent(class UInputComponent* InputComponent)
