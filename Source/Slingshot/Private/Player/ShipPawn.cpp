@@ -20,8 +20,8 @@ AShipPawn::AShipPawn()
 	MeshComponent->SetSimulatePhysics(true);
 	MeshComponent->BodyInstance.bLockZTranslation = true;
 	MeshComponent->SetEnableGravity(false);
-	MeshComponent->SetLinearDamping(0.7f);
-	MeshComponent->SetAngularDamping(0.8f);
+	MeshComponent->SetLinearDamping(ShipLinearDamping);
+	MeshComponent->SetAngularDamping(ShipAngularDamping);
 	MeshComponent->BodyInstance.bLockXRotation = true;
 	MeshComponent->BodyInstance.bLockYRotation = true;
 
@@ -52,7 +52,7 @@ void AShipPawn::BeginPlay()
 		auto particle = GetWorld()->SpawnActor<APreferredDistanceParticle>(APreferredDistanceParticle::StaticClass(), spawn_location, FRotator::ZeroRotator);
 		particle->AffectingActors.Add(this);
 		particle->PreferredDistances.Add(2000.0f);
-		particle->BaseSpeed = 5.0f;
+		particle->BaseSpeed = 10.0f;
 		particle->SpeedExponential = 1.0f;
 	}
 }
@@ -61,16 +61,42 @@ void AShipPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bUseFuel)
+		FuelReserve += FuelRecoveryRate;
+
 	const FVector MoveDirection = FVector(GetInputAxisValue(MoveForwardBinding), GetInputAxisValue(MoveRightBinding), 0.f).GetClampedToMaxSize(1.0f);
 	const float MoveDirectionSizeSquared = MoveDirection.SizeSquared();
-	if (MoveDirectionSizeSquared > 0.0f)
+	if (MoveDirectionSizeSquared > 0.2f)
 	{
 		MeshComponent->SetRelativeRotation(MoveDirection.Rotation());
+
+		auto base_force = 1000 * MeshComponent->GetForwardVector() * MovementSpeed;
+		auto input_thrust = 0.0f;
+		if (bUseSeparateThrusterAxes)
+		{
+			input_thrust = GetInputAxisValue(ForwardThrustBinding);
+		}
+		else
+		{
+			input_thrust = MoveDirectionSizeSquared;
+		}
+
+		if (bUseFuel)
+		{
+			FuelReserve -= input_thrust * FuelUsageRate;
+			if (FuelReserve < 0)
+				FuelReserve = 0.0f;
+		}
+
+		if (bUseShipMomentum)
+		{
+			MeshComponent->AddForce(base_force * DeltaTime * MeshComponent->GetMass());
+		}
+		else
+		{
+			MeshComponent->SetPhysicsLinearVelocity(base_force / 50);
+		}
 	}
-	if (bUseSeparateThrusterAxes)
-		MeshComponent->AddForce(MeshComponent->GetForwardVector() * MeshComponent->GetMass() * MovementForceStrength * DeltaTime * GetInputAxisValue(ForwardThrustBinding));
-	else
-		MeshComponent->AddForce(MeshComponent->GetForwardVector() * MeshComponent->GetMass() * MovementForceStrength * DeltaTime * MoveDirectionSizeSquared);
 }
 
 void AShipPawn::SetupPlayerInputComponent(class UInputComponent* InputComponent)
