@@ -30,9 +30,18 @@ public:
 		TArray<float> PreferredDistances;
 
 	UPROPERTY(EditAnywhere)
-		float BaseSpeed = 1000.0f;
+		float BaseSpeed = 10.0f;
 
 	UPROPERTY(EditAnywhere)
-		float SpeedExponential = 2.0f;
+		float SpeedExponential = 1.0f;
+
+	UPROPERTY(EditAnywhere)
+		float MaxDistance = 2000.0f;
+
+	UPROPERTY(EditAnywhere)
+		float PullMultiplier = 0.05f;
+
+	UPROPERTY(EditAnywhere)
+		float PushMultiplier = 1.0f;
 	
 };

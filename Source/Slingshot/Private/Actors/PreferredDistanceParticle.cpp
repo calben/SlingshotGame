@@ -43,9 +43,9 @@ void APreferredDistanceParticle::Tick( float DeltaTime )
 		forward_direction /= forward_direction.Size();
 		auto force = forward_direction * BaseSpeed * FMath::Pow(FMath::Abs(distance_from_optimal), SpeedExponential) * MeshComponent->GetMass();
 		if (distance_from_optimal > 0)
-			MeshComponent->AddForce(force);
+			MeshComponent->AddForce(PushMultiplier * force);
 		else
-			MeshComponent->AddForce(-force);
+			MeshComponent->AddForce(PullMultiplier * -force);
 	}
 }
 

@@ -20,7 +20,7 @@ AShipPawn::AShipPawn()
 	MeshComponent->SetSimulatePhysics(true);
 	MeshComponent->BodyInstance.bLockZTranslation = true;
 	MeshComponent->SetEnableGravity(false);
-	MeshComponent->SetLinearDamping(0.2f);
+	MeshComponent->SetLinearDamping(0.7f);
 	MeshComponent->SetAngularDamping(0.8f);
 	MeshComponent->BodyInstance.bLockXRotation = true;
 	MeshComponent->BodyInstance.bLockYRotation = true;
@@ -32,14 +32,13 @@ AShipPawn::AShipPawn()
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->AttachTo(RootComponent);
 	CameraBoom->bAbsoluteRotation = true;
-	CameraBoom->TargetArmLength = 10000.f;
+	CameraBoom->TargetArmLength = 20000.f;
 	CameraBoom->RelativeRotation = FRotator(-80.f, 0.f, 0.f);
 	CameraBoom->bDoCollisionTest = false;
 
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->AttachTo(CameraBoom, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;
-
 }
 
 void AShipPawn::BeginPlay()
@@ -53,8 +52,8 @@ void AShipPawn::BeginPlay()
 		auto particle = GetWorld()->SpawnActor<APreferredDistanceParticle>(APreferredDistanceParticle::StaticClass(), spawn_location, FRotator::ZeroRotator);
 		particle->AffectingActors.Add(this);
 		particle->PreferredDistances.Add(2000.0f);
-		particle->BaseSpeed = 10.0f;
-		particle->SpeedExponential = 1.2f;
+		particle->BaseSpeed = 5.0f;
+		particle->SpeedExponential = 1.0f;
 	}
 }
 

@@ -34,10 +34,10 @@ public:
 	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-		float MovementForceStrength = 200000;
+		float MovementForceStrength = 7500000;
 
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
-		float FueldReserve = 1000;
+		float FuelReserve = 1000;
 
 	UPROPERTY(Category = Gameplay, EditAnywhere, BlueprintReadWrite)
 		bool bUseFueld = true;
